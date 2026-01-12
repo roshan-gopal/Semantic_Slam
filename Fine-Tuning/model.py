@@ -42,7 +42,7 @@ class LLAMAModel():
 
 def FinetuneModel(Dataset, Tokenizer, Model, SFTConfig, PeftConfig): 
     trainer = SFTTrainer(
-    model=Model.base_model.model, # the underlying Phi-3 model
+    model=Model.model, # the underlying Phi-3 model
     peft_config=PeftConfig,  # added to fix issue in TRL>=0.20
     processing_class=Tokenizer,
     args=SFTConfig,
