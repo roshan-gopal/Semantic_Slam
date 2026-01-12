@@ -21,7 +21,8 @@ from trl import SFTTrainer
 
 from convertdata import Dataset
 #Need to adjust is as currently it is not exporting as json
-action_observation_pairs = load_dataset("json", data_files="Semantic_Slam/Data/action_observation_pairs.json")
+# Path relative to project root (run script from project root directory)
+action_observation_pairs = load_dataset("json", data_files="Data/action_observation_pairs.json")
 
 
 
