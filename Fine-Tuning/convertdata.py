@@ -12,43 +12,63 @@ import torch.optim as optim
 from torch.utils.data import TensorDataset, DataLoader
 from math import sqrt
 import json
+from datasets import load_dataset
 
 #we need to do embeddings before we make the dataset
+def format_dataset(examples):
+    if isinstance(examples["prompt"], list):
+        output_texts = []
+        for i in range(len(examples["prompt"])):
+            converted_sample = [
+                {"role": "user", "content": examples["prompt"][i]},
+                {"role": "assistant", "content": examples["completion"][i]},
+            ]
+            output_texts.append(converted_sample)
+        return {'messages': output_texts}
+    else:
+        converted_sample = [
+            {"role": "user", "content": examples["prompt"]},
+            {"role": "assistant", "content": examples["completion"]},
+        ]
+        return {'messages': converted_sample}
 
+def convert_observation_to_string(example):
+    # If observation is a dict, convert to JSON string
+    if isinstance(example["prompt"], dict):
+        example["prompt"] = json.dumps(example["prompt"])
+    return example
 
 class Dataset(Dataset):
-    def __init__(self, actions_observation_pairs):
+    def __init__(self, action_observation_pairs):
         super().__init__()
-        
-        for pair in actions_observation_pairs:
-            pair["action"] = json.dumps(pair["action"])
-            pair["observation"] = json.dumps(pair["observation"])
 
-        self.Data = pd.DataFrame(actions_observation_pairs)
-        self.Data = self.Data.to_numpy()
-        
-        
+        action_observation_pairs = action_observation_pairs.rename_column("observation", "prompt")
+        action_observation_pairs = action_observation_pairs.rename_column("action", "completion")
+        action_observation_pairs = action_observation_pairs.map(convert_observation_to_string)
+        action_observation_pairs = action_observation_pairs.map(format_dataset)
+        action_observation_pairs= action_observation_pairs.remove_columns(["prompt", "completion"])
 
-        self.targets = self.Data[:,0]
-        self.features = self.Data[:,1]
+        self.Data = action_observation_pairs
+
     
     def __len__(self):
         return len(self.Data)
 
+# Adapted from trl.extras.dataset_formatting.instructions_formatting_function
+# Converts dataset from prompt/completion format (not supported anymore)
+# to the conversational format
+
 
 if __name__ == "__main__":
     #test with one generated sample
-    actions_observation_pairs = [{"observation": {"adj_locations/objects": {"intersection_1": {"coords": [-5, 0], "description": "Intersection of different paths"}}, "current_location": "pathway_1", "task": "Inspect if there is a place to sit near the main entrance."}, "action": "goto"}, {"observation": {"adj_locations/objects": {"pathway_1": {"coords": [0, 0], "description": "Main entrance pathway"}, "pathway_2": {"coords": [-5, 5], "description": "Leads to the playground"}, "pathway_3": {"coords": [5, 10], "description": "Connects to the pond"}, "pathway_5": {"coords": [-10, -5], "description": "Trail going to the garden"}}, "current_location": "intersection_1", "task": "Inspect if there is a place to sit near the main entrance."}, "action": "goto"}, {"observation": {"adj_locations/objects": {"intersection_1": {"coords": [-5, 0], "description": "Intersection of different paths"}}, "current_location": "pathway_1", "task": "Inspect if there is a place to sit near the main entrance."}, "action": "explore_region"}, {"observation": {"adj_locations/objects": {"pathway_1": {"coords": [0, 0], "description": "Main entrance pathway"}, "pathway_2": {"coords": [-5, 5], "description": "Leads to the playground"}, "pathway_3": {"coords": [5, 10], "description": "Connects to the pond"}, "pathway_5": {"coords": [-10, -5], "description": "Trail going to the garden"}}, "current_location": "intersection_1", "task": "Inspect if there is a place to sit near the main entrance."}, "action": "map_region"}, {"observation": {"adj_locations/objects": {"pathway_1": {"coords": [0, 0], "description": "Main entrance pathway"}, "pathway_2": {"coords": [-5, 5], "description": "Leads to the playground"}, "pathway_3": {"coords": [5, 10], "description": "Connects to the pond"}, "pathway_5": {"coords": [-10, -5], "description": "Trail going to the garden"}}, "current_location": "intersection_1", "task": "Inspect if there is a place to sit near the main entrance."}, "action": "explore_region"}, {"observation": {"adj_locations/objects": {"pathway_1": {"coords": [0, 0], "description": "Main entrance pathway"}, "pathway_2": {"coords": [-5, 5], "description": "Leads to the playground"}, "pathway_3": {"coords": [5, 10], "description": "Connects to the pond"}, "pathway_5": {"coords": [-10, -5], "description": "Trail going to the garden"}}, "current_location": "intersection_1", "task": "Inspect if there is a place to sit near the main entrance."}, "action": "extend_map"}, {"observation": {"adj_locations/objects": {"pathway_1": {"coords": [0, 0], "description": "Main entrance pathway"}, "pathway_2": {"coords": [-5, 5], "description": "Leads to the playground"}, "pathway_3": {"coords": [5, 10], "description": "Connects to the pond"}, "pathway_5": {"coords": [-10, -5], "description": "Trail going to the garden"}}, "current_location": "intersection_1", "task": "Inspect if there is a place to sit near the main entrance."}, "action": "goto"}, {"observation": {"adj_locations/objects": {"intersection_1": {"coords": [-5, 0], "description": "Intersection of different paths"}}, "current_location": "pathway_1", "task": "Inspect if there is a place to sit near the main entrance."}, "action": "explore_region"}, {"observation": {"adj_locations/objects": {"intersection_1": {"coords": [-5, 0], "description": "Intersection of different paths"}}, "current_location": "pathway_1", "task": "Inspect if there is a place to sit near the main entrance."}, "action": "goto"}, {"observation": {"adj_locations/objects": {"pathway_1": {"coords": [0, 0], "description": "Main entrance pathway"}, "pathway_2": {"coords": [-5, 5], "description": "Leads to the playground"}, "pathway_3": {"coords": [5, 10], "description": "Connects to the pond"}, "pathway_5": {"coords": [-10, -5], "description": "Trail going to the garden"}}, "current_location": "intersection_1", "task": "Inspect if there is a place to sit near the main entrance."}, "action": "goto"}]
+    
+    action_observation_pairs = load_dataset("json", data_files="Data/action_observation_pairs.json", split = "train")
+    
+    
 
-    dataset = Dataset(actions_observation_pairs)
-    print("First entry")
-    print(dataset.Data[0])
-    print("Targets")
-    print(dataset.targets[0])
-    print("Features")
-    print(dataset.features[0])
-    print("all data for json")
-    print(dataset.Data)
+    dataset = Dataset(action_observation_pairs)
+    print(dataset.Data[0]['messages'])
+    
 
 
 

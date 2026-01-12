@@ -29,7 +29,14 @@ action_observation_pairs = load_dataset("json", data_files="Data/action_observat
 model = LLAMAModel()
 tokenizer = AutoTokenizer.from_pretrained(model.repo_id)
 
-dataset = Dataset(action_observation_pairs)
+
+tokenizer.pad_token = tokenizer.unk_token
+tokenizer.pad_token_id = tokenizer.unk_token_id
+tokenizer.chat_template
+
+#Get the actual data in the correct format
+dataset_object = Dataset(action_observation_pairs)
+FTDataset = dataset_object.Data
 
 peft_params = LoraConfig(
     lora_alpha=16,
@@ -78,7 +85,7 @@ sft_config = SFTConfig(
     bf16=torch.cuda.is_bf16_supported(including_emulation=False)
 )
 
-FinetuneModel(dataset, tokenizer, model, sft_config, peft_params)
+FinetuneModel(FTDataset, tokenizer, model, sft_config, peft_params)
 
 
 
