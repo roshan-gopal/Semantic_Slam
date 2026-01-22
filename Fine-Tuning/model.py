@@ -50,6 +50,7 @@ def FinetuneModel(Dataset, Tokenizer, Model, SFTConfig, PeftConfig):
     )
 
     trainer.train()
+    print("Hello")
     trainer.save_model()
     Tokenizer.save_pretrained(SFTConfig.output_dir) 
 
