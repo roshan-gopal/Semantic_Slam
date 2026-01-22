@@ -51,8 +51,25 @@ def FinetuneModel(Dataset, Tokenizer, Model, SFTConfig, PeftConfig):
 
     trainer.train()
     print("Hello")
-    trainer.save_model()
-    Tokenizer.save_pretrained(SFTConfig.output_dir) 
+    print(f"Model type: {type(trainer.model)}")
+    print(f"Has PEFT: {hasattr(trainer.model, 'peft_config')}")
+    print(f"Attempting to save model to: {SFTConfig.output_dir}")
+    print(f"Absolute output path: {os.path.abspath(SFTConfig.output_dir)}")
+    try:
+        trainer.save_model()
+        print("Model saved successfully!")
+    except Exception as e:
+        print(f"Error saving model: {e}")
+        import traceback
+        traceback.print_exc()
+    
+    try:
+        Tokenizer.save_pretrained(SFTConfig.output_dir)
+        print("Tokenizer saved successfully!")
+    except Exception as e:
+        print(f"Error saving tokenizer: {e}")
+        import traceback
+        traceback.print_exc() 
 
 if __name__ == "__main__":
     model = LLAMAModel()
