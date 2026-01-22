@@ -50,6 +50,8 @@ def FinetuneModel(Dataset, Tokenizer, Model, SFTConfig, PeftConfig):
     )
 
     trainer.train()
+    trainer.save_model()
+    Tokenizer.save_pretrained(SFTConfig.output_dir) 
 
 if __name__ == "__main__":
     model = LLAMAModel()
