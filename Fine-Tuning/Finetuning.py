@@ -78,7 +78,7 @@ sft_config = SFTConfig(
     ## GROUP 4: Logging parameters
     logging_steps=10,
     logging_dir='./logs',
-    output_dir='./OutputSLM',
+    output_dir='/Users/roshangopal/code/ML_RESEARCH_FROM_SCRATCH/OutputSLM',
     report_to='none',
 
     # ensures bf16 (the new default) is only used when it is actually available

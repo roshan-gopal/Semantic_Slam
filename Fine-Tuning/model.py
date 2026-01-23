@@ -55,9 +55,18 @@ def FinetuneModel(Dataset, Tokenizer, Model, SFTConfig, PeftConfig):
     print(f"Has PEFT: {hasattr(trainer.model, 'peft_config')}")
     print(f"Attempting to save model to: {SFTConfig.output_dir}")
     print(f"Absolute output path: {os.path.abspath(SFTConfig.output_dir)}")
+    # Ensure output directory exists
+    os.makedirs(SFTConfig.output_dir, exist_ok=True)
+    
     try:
         trainer.save_model()
         print("Model saved successfully!")
+        # Verify files were created
+        if os.path.exists(SFTConfig.output_dir):
+            files = os.listdir(SFTConfig.output_dir)
+            print(f"Files in output directory: {files}")
+        else:
+            print(f"WARNING: Output directory does not exist: {SFTConfig.output_dir}")
     except Exception as e:
         print(f"Error saving model: {e}")
         import traceback
@@ -66,6 +75,10 @@ def FinetuneModel(Dataset, Tokenizer, Model, SFTConfig, PeftConfig):
     try:
         Tokenizer.save_pretrained(SFTConfig.output_dir)
         print("Tokenizer saved successfully!")
+        # Verify files were created
+        if os.path.exists(SFTConfig.output_dir):
+            files = os.listdir(SFTConfig.output_dir)
+            print(f"All files in output directory after saving: {files}")
     except Exception as e:
         print(f"Error saving tokenizer: {e}")
         import traceback
